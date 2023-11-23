@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Annotated
 
 from auth import auth
+import uvicorn
 
 app = FastAPI()
 
@@ -37,3 +38,6 @@ async def read_own_items(
     current_user: Annotated[auth.User, Depends(auth.get_current_active_user)]
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=5000, log_level="info")
