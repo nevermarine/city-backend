@@ -1,11 +1,13 @@
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from model import base_models
-from auth import auth
 import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from auth import auth
+from model import base_models
+
 from fastapi.middleware.cors import CORSMiddleware
 import argparse
 import json
@@ -17,7 +19,9 @@ app = FastAPI()
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
-    user = auth.authenticate_user(base_models.fake_users_db, form_data.username, form_data.password)
+    user = auth.authenticate_user(
+        base_models.fake_users_db, form_data.username, form_data.password
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -37,16 +41,18 @@ async def read_users_me(
 ):
     return current_user
 
+
 @app.get("/users/me/items/")
 async def read_own_items(
     current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)]
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
 
+
 # @app.get("/user_reqs/me/items")
 # async def read_own_user_reqs(
 #     current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)],
-#     id: 
+#     id:
 # )
 # @app.get("/user_reqs/items")
 

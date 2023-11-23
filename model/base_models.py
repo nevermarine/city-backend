@@ -1,8 +1,9 @@
+from typing import Annotated
+
 from passlib.hash import bcrypt
 from pydantic import BaseModel
-from typing import Annotated
-HASHED_PASS = bcrypt.hash("secret")
 
+HASHED_PASS = bcrypt.hash("secret")
 
 
 fake_users_db = {
@@ -19,8 +20,9 @@ fake_users_db = {
         "email": "maxim@fedotov.ru",
         "hashed_password": HASHED_PASS,
         "disabled": False,
-    }
+    },
 }
+
 
 class Token(BaseModel):
     access_token: str
