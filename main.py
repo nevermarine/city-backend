@@ -5,6 +5,7 @@ from typing import Annotated
 
 from model import base_models
 from auth import auth
+import uvicorn
 
 app = FastAPI()
 
@@ -45,3 +46,6 @@ async def read_own_items(
 #     id: 
 # )
 # @app.get("/user_reqs/items")
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=5000, log_level="info")
