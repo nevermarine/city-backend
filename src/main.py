@@ -1,12 +1,12 @@
 import argparse
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Annotated
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 
 from src.auth import auth
 from src.model import base_models
@@ -75,7 +75,7 @@ async def read_own_user_reqs(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default=None, help="host name")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="host name")
     parser.add_argument("--port", type=int, default=5000, help="port number")
     parser.add_argument(
         "--allow-credentials", action="store_true", help="allow credentials"
@@ -99,4 +99,4 @@ if __name__ == "__main__":
         allow_headers=args.allowed_headers,
     )
 
-    uvicorn.run(app, port=5000, host="0.0.0.0", log_level="info")
+    uvicorn.run(app, port=args.port, host=args.host, log_level="info")
