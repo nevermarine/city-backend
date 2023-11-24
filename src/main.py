@@ -57,7 +57,7 @@ async def read_own_items(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default=None, help="host name")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="host name")
     parser.add_argument("--port", type=int, default=5000, help="port number")
     parser.add_argument(
         "--allow-credentials", action="store_true", help="allow credentials"
@@ -81,4 +81,4 @@ if __name__ == "__main__":
         allow_headers=args.allowed_headers,
     )
 
-    uvicorn.run(app, port=5000, host="0.0.0.0", log_level="info")
+    uvicorn.run(app, port=args.port, host=args.host, log_level="info")
