@@ -1,5 +1,10 @@
+import os
+import sys
+
 from fastapi.testclient import TestClient
-from passlib.hash import bcrypt
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
 
 from src.main import app
 from src.model import base_models

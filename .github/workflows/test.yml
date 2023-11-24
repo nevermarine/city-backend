@@ -26,4 +26,5 @@ jobs:
 
       - name: Run tests
         run: |
+          cd $GITHUB_WORKSPACE
           poetry run pytest tests/test.py
