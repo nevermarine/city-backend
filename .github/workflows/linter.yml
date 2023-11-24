@@ -1,0 +1,23 @@
+name: Flake8
+
+on: [push, pull_request]
+
+jobs:
+  flake8_job:
+    name: Flake8 Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: pip install flake8
+
+      - name: Run Flake8
+        run: flake8

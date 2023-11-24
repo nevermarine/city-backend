@@ -1,12 +1,12 @@
 import argparse
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Annotated
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 
 from src.auth import auth
 from src.model import base_models

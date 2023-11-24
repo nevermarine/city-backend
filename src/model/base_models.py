@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from passlib.hash import bcrypt
 from pydantic import BaseModel
 
