@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import Annotated
 from uuid import uuid4
+
 from passlib.hash import bcrypt
 from pydantic import BaseModel, Field
 
