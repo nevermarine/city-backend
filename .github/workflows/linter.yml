@@ -3,10 +3,8 @@ name: Linter
 on: [push, pull_request]
 
 jobs:
-  flake8_job:
-    name: Flake8 Lint
+  linter:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
