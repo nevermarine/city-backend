@@ -6,13 +6,10 @@ from src.model import base_models
 
 client = TestClient(app)
 
-import os
 import sys
+from pathlib import Path
 
-# Add project root directory to the Python import path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = os.path.dirname(current_dir)
-sys.path.append(root_dir)
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 
 def test_login_for_access_token():
