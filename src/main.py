@@ -1,16 +1,15 @@
+import argparse
+import json
 from datetime import datetime, timedelta
 from typing import Annotated
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from auth import auth
 from model import base_models
-
-from fastapi.middleware.cors import CORSMiddleware
-import argparse
-import json
 
 app = FastAPI()
 
@@ -60,21 +59,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default=None, help="host name")
     parser.add_argument("--port", type=int, default=5000, help="port number")
-    parser.add_argument("--allow-credentials",
-                        action="store_true",
-                        help="allow credentials")
-    parser.add_argument("--allowed-origins",
-                        type=json.loads,
-                        default=["*"],
-                        help="allowed origins")
-    parser.add_argument("--allowed-methods",
-                        type=json.loads,
-                        default=["*"],
-                        help="allowed methods")
-    parser.add_argument("--allowed-headers",
-                        type=json.loads,
-                        default=["*"],
-                        help="allowed headers")
+    parser.add_argument(
+        "--allow-credentials", action="store_true", help="allow credentials"
+    )
+    parser.add_argument(
+        "--allowed-origins", type=json.loads, default=["*"], help="allowed origins"
+    )
+    parser.add_argument(
+        "--allowed-methods", type=json.loads, default=["*"], help="allowed methods"
+    )
+    parser.add_argument(
+        "--allowed-headers", type=json.loads, default=["*"], help="allowed headers"
+    )
     args = parser.parse_args()
 
     app.add_middleware(
@@ -84,5 +80,5 @@ if __name__ == "__main__":
         allow_methods=args.allowed_methods,
         allow_headers=args.allowed_headers,
     )
-    
-    uvicorn.run(app, port=5000, log_level="info")
+
+    uvicorn.run(app, port=5000, host="0.0.0.0", log_level="info")
