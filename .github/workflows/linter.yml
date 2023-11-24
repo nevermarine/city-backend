@@ -1,4 +1,4 @@
-name: Flake8
+name: Linter
 
 on: [push, pull_request]
 
@@ -17,7 +17,13 @@ jobs:
           python-version: 3.11
 
       - name: Install dependencies
-        run: pip install flake8
+        run: pip install flake8 black isort
 
       - name: Run Flake8
         run: flake8
+
+      - name: Run black
+        run: black .
+
+      - name: Run isort
+        run: isort .
