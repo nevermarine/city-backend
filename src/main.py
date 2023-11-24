@@ -48,12 +48,30 @@ async def read_own_items(
     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
-# @app.get("/user_reqs/me/items")
-# async def read_own_user_reqs(
-#     current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)],
-#     id:
-# )
-# @app.get("/user_reqs/items")
+@app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)
+async def read_own_user_reqs_by_id(
+    current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)],
+    id: str,
+):
+    user_req = base_models.fake_user_reqs_db.get(id)
+    if user_req is None or user_req["username"] != current_user.username:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return user_req
+
+
+@app.get("/user_reqs/items/me/", response_model=list[base_models.UserRequest])
+async def read_own_user_reqs(
+    current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)],
+):
+    filtered_dict = {
+        key: value
+        for key, value in base_models.fake_user_reqs_db.items()
+        if value["username"] == current_user.username
+    }
+    if filtered_dict is {}:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return filtered_dict.values()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
