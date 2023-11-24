@@ -1,15 +1,15 @@
+import os
+import sys
+
 from fastapi.testclient import TestClient
-from passlib.hash import bcrypt
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
 
 from src.main import app
 from src.model import base_models
 
 client = TestClient(app)
-
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 
 def test_login_for_access_token():
