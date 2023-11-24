@@ -8,8 +8,8 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from auth import auth
-from model import base_models
+from src.auth import auth
+from src.model import base_models
 
 app = FastAPI()
 
