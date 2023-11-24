@@ -1,7 +1,7 @@
 # city-backend
 Бекенд для горолда Зарафшан.
 
-## Как билдить и запускать
+## Как билдить (без Docker)
 Для сборки требуется poetry.
 ```bash
 git clone https://github.com/nevermarine/city-backend
@@ -10,4 +10,11 @@ poetry install
 poetry shell
 uvicorn main:app --reload
 ```
-Swagger будет доступен по адресу http://localhost:8000/docs.
+## Как билдить (с Docker)
+```bash
+git clone https://github.com/nevermarine/city-backend
+cd city-backend
+docker compose up
+```
+
+Swagger будет доступен по адресу http://localhost:5000/docs.
