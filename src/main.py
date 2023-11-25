@@ -7,6 +7,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from passlib.hash import bcrypt
 
 from src.auth import auth
 from src.model import base_models
@@ -46,6 +47,23 @@ async def read_own_items(
     current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)]
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
+
+
+@app.post("/users/create", response_model=base_models.User)
+async def create_user(user: base_models.UserCreate):
+    user_data = user.model_dump()
+    hashed_password = bcrypt.hash(user_data.pop("password"))
+
+    new_user = {
+        "username": user_data["username"],
+        "full_name": user_data["full_name"],
+        "email": user_data["email"],
+        "hashed_password": hashed_password,
+        "disabled": False,
+    }
+
+    base_models.fake_users_db[user_data["username"]] = new_user
+    return new_user
 
 
 @app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)
