@@ -66,6 +66,15 @@ async def create_user(user: base_models.UserCreate):
     return new_user
 
 
+@app.delete("/users/{username}", response_model=base_models.User)
+async def delete_user(username: str):
+    if username in base_models.fake_users_db:
+        deleted_user = base_models.fake_users_db.pop(username)
+        return deleted_user
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+
+
 @app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)
 async def read_own_user_reqs_by_id(
     current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)],
