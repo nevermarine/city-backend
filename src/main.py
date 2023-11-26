@@ -51,19 +51,22 @@ async def read_own_items(
 
 @app.post("/users/create", response_model=base_models.User)
 async def create_user(user: base_models.UserCreate):
-    user_data = user.model_dump()
-    hashed_password = bcrypt.hash(user_data.pop("password"))
+    if user.username not in base_models.fake_users_db.keys():
+        user_data = user.model_dump()
+        hashed_password = bcrypt.hash(user_data.pop("password"))
 
-    new_user = {
-        "username": user_data["username"],
-        "full_name": user_data["full_name"],
-        "email": user_data["email"],
-        "hashed_password": hashed_password,
-        "disabled": False,
-    }
+        new_user = {
+            "username": user_data["username"],
+            "full_name": user_data["full_name"],
+            "email": user_data["email"],
+            "hashed_password": hashed_password,
+            "disabled": False,
+        }
 
-    base_models.fake_users_db[user_data["username"]] = new_user
-    return new_user
+        base_models.fake_users_db[user_data["username"]] = new_user
+        return new_user
+    else:
+        raise HTTPException(status_code=404, detail="User already exist")
 
 
 @app.delete("/users/{username}", response_model=base_models.User)
