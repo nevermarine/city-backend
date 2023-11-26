@@ -48,13 +48,6 @@ fake_user_reqs_db = {
 }
 
 
-class UserCreate(BaseModel):
-    username: str
-    full_name: str
-    email: str
-    password: str
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -69,6 +62,10 @@ class User(BaseModel):
     email: str | None = None
     full_name: str | None = None
     disabled: bool | None = None
+
+
+class UserCreate(User):
+    password: str
 
 
 class UserInDB(User):
