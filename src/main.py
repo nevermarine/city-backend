@@ -75,6 +75,27 @@ async def delete_user(username: str):
         raise HTTPException(status_code=404, detail="User not found")
 
 
+@app.get("/users", response_model=list[base_models.User])
+async def get_all_users():
+    return list(base_models.fake_users_db.values())
+
+
+@app.put("/users/{username}", response_model=base_models.User)
+async def update_user(username: str, new_user_data: base_models.User):
+    if username in base_models.fake_users_db:
+        user_dict = base_models.fake_users_db[username]
+        user = base_models.User(**user_dict)
+
+        user.email = new_user_data.email
+        user.full_name = new_user_data.full_name
+        user.disabled = new_user_data.disabled
+
+        base_models.fake_users_db[username] = user.model_dump()
+        return user
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+
+
 @app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)
 async def read_own_user_reqs_by_id(
     current_user: Annotated[base_models.User, Depends(auth.get_current_active_user)],
