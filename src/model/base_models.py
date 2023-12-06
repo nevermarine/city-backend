@@ -1,28 +1,11 @@
 from enum import Enum
 from uuid import uuid4
 
+import dotenv
 from passlib.hash import bcrypt
 from pydantic import BaseModel, Field
 
-HASHED_PASS = bcrypt.hash("secret")
-
-
-fake_users_db = {
-    "darinka": {
-        "username": "darinka",
-        "full_name": "Darina Rustamova",
-        "email": "darinka@rustamova.ru",
-        "hashed_password": HASHED_PASS,
-        "disabled": False,
-    },
-    "maxim": {
-        "username": "maxim",
-        "full_name": "Maxim Fedotov",
-        "email": "maxim@fedotov.ru",
-        "hashed_password": HASHED_PASS,
-        "disabled": False,
-    },
-}
+config = dotenv.dotenv_values(".env")
 
 fake_user_reqs_db = {
     "a5cf4789b6f74285b820e754f4ed65bb": {
