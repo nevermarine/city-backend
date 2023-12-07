@@ -2,8 +2,8 @@ from enum import Enum
 from uuid import uuid4
 
 import dotenv
-from passlib.hash import bcrypt
-from pydantic import BaseModel, Field
+# from pydantic import BaseModel, Field
+from sqlmodel import Field, SQLModel
 
 config = dotenv.dotenv_values(".env")
 
@@ -31,20 +31,21 @@ fake_user_reqs_db = {
 }
 
 
-class Token(BaseModel):
+class Token(SQLModel):
     access_token: str
     token_type: str
 
 
-class TokenData(BaseModel):
+class TokenData(SQLModel):
     username: str | None = None
 
 
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
+class User(SQLModel, table=True):
+    username: str = Field(
+        sa_column_kwargs={"unique": True, "nullable": False, "primary_key": True}
+    )
+    full_name: str = Field(max_length=100)
+    email: str = Field(sa_column_kwargs={"unique": True, "nullable": False})
 
 
 class UserCreate(User):
@@ -52,7 +53,7 @@ class UserCreate(User):
 
 
 class UserInDB(User):
-    hashed_password: str
+    password: str
 
 
 class UserReqStatus(str, Enum):

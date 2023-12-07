@@ -19,9 +19,7 @@ app = FastAPI()
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
-    user = auth.authenticate_user(
-        base_models.fake_users_db, form_data.username, form_data.password
-    )
+    user = auth.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

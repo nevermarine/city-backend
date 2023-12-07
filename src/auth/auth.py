@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 
-import psycopg2
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlmodel import Session, select
 
-from src.model import base_models, conn
+from src.model import base_models
+from src.model.conn import engine
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
@@ -26,19 +27,17 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
-    conn = conn.get_conn()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = '%s'" % username)
-    row = cursor.fetchall
-
-    if username in db:
-        user_dict = db[username]
-        return base_models.UserInDB(**user_dict)
+def get_user(username: str):
+    with Session(engine) as s:
+        statement = select(base_models.User).where(
+            base_models.User.username == username
+        )
+        user = s.exec(statement).first
+        return base_models.UserInDB(user)
 
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -71,7 +70,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         token_data = base_models.TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(base_models.fake_users_db, username=token_data.username)
+    user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
