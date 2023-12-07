@@ -119,9 +119,17 @@ async def read_own_user_reqs(
         for key, value in base_models.fake_user_reqs_db.items()
         if value["username"] == current_user.username
     }
-    if filtered_dict is {}:
+    if len(filtered_dict) == 0:
         raise HTTPException(status_code=404, detail="Item not found")
     return filtered_dict.values()
+
+
+@app.post("/user_reqs/items/create", status_code=201)
+async def create_user_req(
+    user_req: base_models.UserRequest,
+):
+    base_models.fake_user_reqs_db[user_req.id] = user_req.model_dump()
+    return user_req
 
 
 if __name__ == "__main__":
