@@ -100,7 +100,10 @@ async def delete_user(username: str):
 
 @app.get("/users", response_model=list[base_models.Users])
 async def get_all_users():
-    return list(base_models.fake_users_db.values())
+    with Session(engine) as session:
+        statement = select(base_models.Users)
+        users = session.exec(statement).all()
+    return users
 
 
 @app.put("/users/{username}", response_model=base_models.Users)
