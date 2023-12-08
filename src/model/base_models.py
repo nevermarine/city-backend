@@ -1,10 +1,10 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from uuid import uuid4
 
 import dotenv
 from pydantic import BaseModel
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 config = dotenv.dotenv_values(".env")
 
@@ -46,6 +46,10 @@ class Users(SQLModel, table=True):
     full_name: Optional[str] = Field(max_length=100)
     email: Optional[str] = Field(unique=True, nullable=False)
 
+    password: List["Passwords"] = Relationship(
+        back_populates="info", sa_relationship_kwargs={"cascade": "delete"}
+    )
+
 
 class UserCreate(BaseModel):
     username: str = Field(unique=True, nullable=False, primary_key=True)
@@ -59,6 +63,8 @@ class Passwords(SQLModel, table=True):
         unique=True, nullable=False, primary_key=True, foreign_key="users.username"
     )
     password: str = Field(nullable=True)
+
+    info: Users = Relationship(back_populates="password")
 
 
 class UserReqStatus(str, Enum):

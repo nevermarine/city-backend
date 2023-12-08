@@ -57,21 +57,20 @@ async def create_user(user: base_models.UserCreate):
         )
         find_user = session.exec(statement).first()
 
-    if find_user is None:
-        user_data = user.model_dump()
-        hashed_password = bcrypt.hash(user_data["password"])
+        if find_user is None:
+            user_data = user.model_dump()
+            hashed_password = bcrypt.hash(user_data["password"])
 
-        new_user = {
-            "username": user_data["username"],
-            "full_name": user_data["full_name"],
-            "email": user_data["email"],
-        }
-        new_pass_user = {
-            "username": user_data["username"],
-            "password": hashed_password,
-        }
+            new_user = {
+                "username": user_data["username"],
+                "full_name": user_data["full_name"],
+                "email": user_data["email"],
+            }
+            new_pass_user = {
+                "username": user_data["username"],
+                "password": hashed_password,
+            }
 
-        with Session(engine) as session:
             new_user = base_models.Users(**new_user)
             session.add(new_user)
             session.commit()
@@ -80,17 +79,23 @@ async def create_user(user: base_models.UserCreate):
             session.add(new_pass_user)
             session.commit()
 
-    else:
-        raise HTTPException(status_code=404, detail="User already exist")
+        else:
+            raise HTTPException(status_code=404, detail="User already exist")
 
 
-@app.delete("/users/{username}", response_model=base_models.Users)
+@app.delete("/users/{username}")
 async def delete_user(username: str):
-    if username in base_models.fake_users_db:
-        deleted_user = base_models.fake_users_db.pop(username)
-        return deleted_user
-    else:
-        raise HTTPException(status_code=404, detail="User not found")
+    with Session(engine) as session:
+        statement = select(base_models.Users).where(
+            base_models.Users.username == username
+        )
+        find_user = session.exec(statement).first()
+
+        if find_user is not None:
+            session.delete(find_user)
+            session.commit()
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
 
 
 @app.get("/users", response_model=list[base_models.Users])
