@@ -47,7 +47,10 @@ class Users(SQLModel, table=True):
     email: Optional[str] = Field(unique=True, nullable=False)
 
 
-class UserCreate(Users):
+class UserCreate(BaseModel):
+    username: str = Field(unique=True, nullable=False, primary_key=True)
+    full_name: Optional[str] = Field(max_length=100)
+    email: Optional[str] = Field(unique=True, nullable=False)
     password: str
 
 

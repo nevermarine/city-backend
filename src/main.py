@@ -51,16 +51,15 @@ async def read_own_items(
 
 @app.post("/users/create")
 async def create_user(user: base_models.UserCreate):
-    print(user)
     with Session(engine) as session:
         statement = select(base_models.Users).where(
             base_models.Users.username == user.username
         )
-        user = session.exec(statement).first
+        find_user = session.exec(statement).first()
 
-    if user:
+    if find_user is None:
         user_data = user.model_dump()
-        hashed_password = bcrypt.hash(user_data.pop("password"))
+        hashed_password = bcrypt.hash(user_data["password"])
 
         new_user = {
             "username": user_data["username"],
@@ -69,15 +68,18 @@ async def create_user(user: base_models.UserCreate):
         }
         new_pass_user = {
             "username": user_data["username"],
-            "hashed_password": hashed_password,
+            "password": hashed_password,
         }
 
-        new_user = base_models.Users(**new_user)
-        new_pass_user = base_models.Passwords(**new_pass_user)
-
         with Session(engine) as session:
+            new_user = base_models.Users(**new_user)
             session.add(new_user)
+            session.commit()
+
+            new_pass_user = base_models.Passwords(**new_pass_user)
             session.add(new_pass_user)
+            session.commit()
+
     else:
         raise HTTPException(status_code=404, detail="User already exist")
 

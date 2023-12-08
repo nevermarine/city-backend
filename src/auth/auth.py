@@ -36,11 +36,8 @@ def get_user(username: str):
         statement = select(base_models.Passwords).where(
             base_models.Passwords.username == username
         )
-        user = s.exec(statement).all()
-        if user:
-            return user[0]
-        else:
-            return False
+        user = s.exec(statement).first()
+        return user
 
 
 def authenticate_user(username: str, password: str):
@@ -92,5 +89,5 @@ async def get_current_active_user(
         base_models.Users.username == current_user.username
     )
     with Session(engine) as session:
-        user = session.exec(st).all()[0]
+        user = session.exec(st).first()
     return user
