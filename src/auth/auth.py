@@ -36,8 +36,11 @@ def get_user(username: str):
         statement = select(base_models.Passwords).where(
             base_models.Passwords.username == username
         )
-        user = s.exec(statement).all()[0]
-        return user
+        user = s.exec(statement).all()
+        if user:
+            return user[0]
+        else:
+            return False
 
 
 def authenticate_user(username: str, password: str):
@@ -83,6 +86,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 async def get_current_active_user(
     current_user: Annotated[base_models.Users, Depends(get_current_user)]
 ):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+    # if current_user.disabled:
+    #     raise HTTPException(status_code=400, detail="Inactive user")
+    st = select(base_models.Users).where(
+        base_models.Users.username == current_user.username
+    )
+    with Session(engine) as session:
+        user = session.exec(st).all()[0]
+    return user
