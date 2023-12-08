@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from typing import Annotated
 
@@ -9,6 +10,9 @@ from sqlmodel import Session, select
 
 from src.model import base_models
 from src.model.conn import engine
+
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger().setLevel(logging.DEBUG)
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
@@ -29,18 +33,18 @@ def get_password_hash(password):
 
 def get_user(username: str):
     with Session(engine) as s:
-        statement = select(base_models.User).where(
-            base_models.User.username == username
+        statement = select(base_models.Passwords).where(
+            base_models.Passwords.username == username
         )
-        user = s.exec(statement).first
-        return base_models.UserInDB(user)
+        user = s.exec(statement).all()[0]
+        return user
 
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user.password):
         return False
     return user
 
@@ -77,7 +81,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 async def get_current_active_user(
-    current_user: Annotated[base_models.User, Depends(get_current_user)]
+    current_user: Annotated[base_models.Users, Depends(get_current_user)]
 ):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")

@@ -1,8 +1,9 @@
 from enum import Enum
+from typing import Optional
 from uuid import uuid4
 
 import dotenv
-# from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
 
 config = dotenv.dotenv_values(".env")
@@ -31,29 +32,30 @@ fake_user_reqs_db = {
 }
 
 
-class Token(SQLModel):
+class Token(BaseModel):
     access_token: str
     token_type: str
 
 
-class TokenData(SQLModel):
+class TokenData(BaseModel):
     username: str | None = None
 
 
-class User(SQLModel, table=True):
+class Users(SQLModel, table=True):
+    username: str = Field(unique=True, nullable=False, primary_key=True)
+    full_name: Optional[str] = Field(max_length=100)
+    email: Optional[str] = Field(unique=True, nullable=False)
+
+
+class UserCreate(Users):
+    password: str
+
+
+class Passwords(SQLModel, table=True):
     username: str = Field(
-        sa_column_kwargs={"unique": True, "nullable": False, "primary_key": True}
+        unique=True, nullable=False, primary_key=True, foreign_key="users.username"
     )
-    full_name: str = Field(max_length=100)
-    email: str = Field(sa_column_kwargs={"unique": True, "nullable": False})
-
-
-class UserCreate(User):
-    password: str
-
-
-class UserInDB(User):
-    password: str
+    password: str = Field(nullable=True)
 
 
 class UserReqStatus(str, Enum):
@@ -61,7 +63,7 @@ class UserReqStatus(str, Enum):
     resolved = "Resolved"
 
 
-class UserRequest(User):
+class UserRequest(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex)
     message: str
     status: UserReqStatus = UserReqStatus.pending

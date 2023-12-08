@@ -38,7 +38,7 @@ def test_read_users_me():
     assert "email" in data
     assert "full_name" in data
     assert "disabled" in data
-    assert base_models.User(**data)
+    assert base_models.Users(**data)
 
 
 def test_read_own_items():
