@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 from datetime import timedelta
 from typing import Annotated
 
@@ -15,6 +16,16 @@ from src.model import base_models
 from src.model.conn import engine
 
 app = FastAPI(debug=True)
+
+
+def check_exist_user(username: str):
+    with Session(engine) as session:
+        statement = select(base_models.Users).where(
+            base_models.Users.username == username
+        )
+        find_user = session.exec(statement).first()
+
+    return find_user
 
 
 @app.post("/token", response_model=base_models.Token)
@@ -106,18 +117,17 @@ async def get_all_users():
     return users
 
 
-@app.put("/users/{username}", response_model=base_models.Users)
+@app.put("/users/{username}")
 async def update_user(username: str, new_user_data: base_models.Users):
-    if username in base_models.fake_users_db:
-        user_dict = base_models.fake_users_db[username]
-        user = base_models.Users(**user_dict)
-
-        user.email = new_user_data.email
-        user.full_name = new_user_data.full_name
-        user.disabled = new_user_data.disabled
-
-        base_models.fake_users_db[username] = user.model_dump()
-        return user
+    find_user = check_exist_user(username)
+    if find_user is not None:
+        with Session(engine) as session:
+            logging.info(find_user)
+            find_user.email = new_user_data.email
+            find_user.full_name = new_user_data.full_name
+            session.add(find_user)
+            session.commit()
+            session.refresh(find_user)
     else:
         raise HTTPException(status_code=404, detail="User not found")
 
