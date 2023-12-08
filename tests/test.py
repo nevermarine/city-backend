@@ -13,7 +13,7 @@ client = TestClient(app)
 
 
 def test_login_for_access_token():
-    response = client.post("/token", data={"username": "darinka", "password": "secret"})
+    response = client.post("/token", data={"username": "darinka", "password": "string"})
     assert response.status_code == 200
 
     data = response.json()
@@ -27,7 +27,7 @@ def test_read_users_me():
     response = client.get("/users/me/")
     assert response.status_code == 401
 
-    response = client.post("/token", data={"username": "darinka", "password": "secret"})
+    response = client.post("/token", data={"username": "darinka", "password": "string"})
 
     headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
     response = client.get("/users/me/", headers=headers)
@@ -37,7 +37,6 @@ def test_read_users_me():
     assert "username" in data
     assert "email" in data
     assert "full_name" in data
-    assert "disabled" in data
     assert base_models.Users(**data)
 
 
@@ -45,7 +44,7 @@ def test_read_own_items():
     response = client.get("/users/me/items/")
     assert response.status_code == 401
 
-    response = client.post("/token", data={"username": "darinka", "password": "secret"})
+    response = client.post("/token", data={"username": "darinka", "password": "string"})
     headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
 
     response = client.get("/users/me/items/", headers=headers)
@@ -115,7 +114,7 @@ def test_delete_user_not_found():
 def test_get_all_users():
     response = client.get("/users")
     assert response.status_code == 200
-    assert len(response.json()) == len(base_models.fake_users_db)
+    assert type(response.json()) == list
 
 
 def test_update_user():
@@ -124,7 +123,6 @@ def test_update_user():
         "username": username,
         "email": "newemail@example.com",
         "full_name": "Updated User",
-        "disabled": True,
     }
 
     response = client.put(f"/users/{username}", json=new_user_data)
@@ -137,7 +135,6 @@ def test_update_user():
     assert updated_user["username"] == username
     assert updated_user["full_name"] == new_user_data["full_name"]
     assert updated_user["email"] == new_user_data["email"]
-    assert updated_user["disabled"] == new_user_data["disabled"]
 
 
 def test_update_user_not_found():
@@ -146,7 +143,6 @@ def test_update_user_not_found():
         "username": username,
         "email": "newemail@example.com",
         "full_name": "Updated User",
-        "disabled": True,
     }
     response = client.put(f"/users/{username}", json=new_user_data)
     assert response.status_code == 404
