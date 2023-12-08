@@ -60,7 +60,7 @@ async def read_own_items(
     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
-@app.post("/users/create")
+@app.post("/users/create", response_model=base_models.Users)
 async def create_user(user: base_models.UserCreate):
     with Session(engine) as session:
         statement = select(base_models.Users).where(
@@ -90,11 +90,13 @@ async def create_user(user: base_models.UserCreate):
             session.add(new_pass_user)
             session.commit()
 
+            return new_user
+
         else:
             raise HTTPException(status_code=404, detail="User already exist")
 
 
-@app.delete("/users/{username}")
+@app.delete("/users/{username}", response_model=base_models.Users)
 async def delete_user(username: str):
     with Session(engine) as session:
         statement = select(base_models.Users).where(
@@ -105,6 +107,7 @@ async def delete_user(username: str):
         if find_user is not None:
             session.delete(find_user)
             session.commit()
+            return find_user
         else:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -117,7 +120,7 @@ async def get_all_users():
     return users
 
 
-@app.put("/users/{username}")
+@app.put("/users/{username}", response_model=base_models.Users)
 async def update_user(username: str, new_user_data: base_models.Users):
     find_user = check_exist_user(username)
     if find_user is not None:
@@ -128,6 +131,7 @@ async def update_user(username: str, new_user_data: base_models.Users):
             session.add(find_user)
             session.commit()
             session.refresh(find_user)
+            return find_user
     else:
         raise HTTPException(status_code=404, detail="User not found")
 
