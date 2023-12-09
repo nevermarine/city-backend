@@ -72,25 +72,25 @@ async def create_user(user: base_models.UserCreate):
             user_data = user.model_dump()
             hashed_password = bcrypt.hash(user_data["password"])
 
-            new_user = {
+            new_user_json = {
                 "username": user_data["username"],
                 "full_name": user_data["full_name"],
                 "email": user_data["email"],
             }
-            new_pass_user = {
+            new_pass_user_json = {
                 "username": user_data["username"],
                 "password": hashed_password,
             }
 
-            new_user = base_models.Users(**new_user)
+            new_user = base_models.Users(**new_user_json)
             session.add(new_user)
             session.commit()
 
-            new_pass_user = base_models.Passwords(**new_pass_user)
+            new_pass_user = base_models.Passwords(**new_pass_user_json)
             session.add(new_pass_user)
             session.commit()
 
-            return new_user
+            return base_models.Users(**new_user_json)
 
         else:
             raise HTTPException(status_code=404, detail="User already exist")
