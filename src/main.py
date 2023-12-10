@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from passlib.hash import bcrypt
-from sqlmodel import Session, select
+from sqlmodel import Session, delete, select, update
 
 from src.auth import auth
 from src.model import base_models
@@ -51,19 +51,6 @@ async def read_users_me(
     current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)]
 ):
     return current_user
-
-
-@app.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)]
-):
-    with Session(engine) as session:
-        statement = select(base_models.UserRequest).where(
-            base_models.UserRequest.username == current_user.username
-        )
-        requests = session.exec(statement).all()
-
-    return requests
 
 
 @app.post("/users/create", response_model=base_models.Users)
@@ -142,29 +129,101 @@ async def update_user(username: str, new_user_data: base_models.Users):
         raise HTTPException(status_code=404, detail="User not found")
 
 
+@app.get("/users/me/items/")
+async def read_own_items(
+    current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)]
+):
+    with Session(engine) as session:
+        statement = select(base_models.UserRequest).where(
+            base_models.UserRequest.username == current_user.username
+        )
+        requests = session.exec(statement).all()
+
+    return requests
+
+
 @app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)
 async def read_own_user_reqs_by_id(
-    current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)],
-    id: str,
+    id_request: str,
 ):
-    user_req = base_models.fake_user_reqs_db.get(id)
-    if user_req is None or user_req["username"] != current_user.username:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return user_req
+    with Session(engine) as session:
+        statement = select(base_models.UserRequest).where(
+            base_models.UserRequest.id == id_request
+        )
+        request_info = session.exec(statement).first()
+
+    return request_info
 
 
-@app.get("/user_reqs/items/me/", response_model=list[base_models.UserRequest])
-async def read_own_user_reqs(
+@app.post("/user_reqs/create/", response_model=base_models.UserRequest)
+async def create_user_request(
+    request: base_models.UserRequest,
     current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)],
 ):
-    filtered_dict = {
-        key: value
-        for key, value in base_models.fake_user_reqs_db.items()
-        if value["username"] == current_user.username
-    }
-    if filtered_dict is {}:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return filtered_dict.values()
+    request.username = current_user.username
+
+    with Session(engine) as session:
+        session.add(request)
+        session.commit()
+        session.refresh(request)
+
+    return request
+
+
+@app.put("/user_reqs/{id_request}/status/")
+async def update_user_request_status(
+    id_request: str, status: base_models.UserReqStatus
+):
+    with Session(engine) as session:
+        statement = (
+            update(base_models.UserRequest)
+            .where(base_models.UserRequest.id == id_request)
+            .values(status=status)
+        )
+
+        session.exec(statement)
+        session.commit()
+
+    return {"message": "Status updated successfully"}
+
+
+@app.put("/user_reqs/{id_request}/response/")
+async def add_user_request_response(id_request: str, response: str):
+    with Session(engine) as session:
+        statement = (
+            update(base_models.UserRequest)
+            .where(base_models.UserRequest.id == id_request)
+            .values(response=response)
+        )
+
+        session.exec(statement)
+        session.commit()
+
+    return {"message": "Response added successfully"}
+
+
+@app.delete("/user_reqs/{id_request}/")
+async def delete_user_request(id_request: str):
+    with Session(engine) as session:
+        statement = delete(base_models.UserRequest).where(
+            base_models.UserRequest.id == id_request
+        )
+
+        session.exec(statement)
+        session.commit()
+
+    return {"message": "User request deleted successfully"}
+
+
+@app.get("/user_reqs/{username}/items/", response_model=list[base_models.UserRequest])
+async def get_user_requests(username: str):
+    with Session(engine) as session:
+        statement = select(base_models.UserRequest).where(
+            base_models.UserRequest.username == username
+        )
+        user_requests = session.exec(statement).all()
+
+    return user_requests
 
 
 if __name__ == "__main__":

@@ -1,11 +1,10 @@
 import enum
+import uuid
 from typing import List, Optional
-from uuid import uuid4
 
 import dotenv
-from pydantic import BaseModel
-from sqlmodel import Field, Relationship, SQLModel, Column, Enum
-import uuid as uuid_pkg
+from pydantic import UUID4, BaseModel
+from sqlmodel import Column, Enum, Field, Relationship, SQLModel
 
 config = dotenv.dotenv_values(".env")
 
@@ -76,11 +75,22 @@ class UserReqStatus(str, enum.Enum):
     resolved = "Resolved"
 
 
+def new_uuid() -> uuid.UUID:
+    # Note: Work around UUIDs with leading zeros: https://github.com/tiangolo/sqlmodel/issues/25
+    # by making sure uuid str does not start with a leading 0
+    val = uuid.uuid4()
+    while val.hex[0] == "0":
+        val = uuid.uuid4()
+    return val
+
+
 class UserRequest(SQLModel, table=True):
-    id: str = Field(unique=True, nullable=False, primary_key=True, default_factory=uuid_pkg.uuid4)
+    id: UUID4 = Field(
+        unique=True, nullable=False, primary_key=True, default_factory=new_uuid
+    )
     username: str = Field(nullable=False, foreign_key="users.username")
     message: str = Field(nullable=False)
     status: UserReqStatus = Field(sa_column=Column(Enum(UserReqStatus)))
     response: str = Field(nullable=True)
-    
+
     user: Users = Relationship(back_populates="requests")
