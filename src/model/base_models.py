@@ -1,10 +1,11 @@
-from enum import Enum
+import enum
 from typing import List, Optional
 from uuid import uuid4
 
 import dotenv
 from pydantic import BaseModel
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, Column, Enum
+import uuid as uuid_pkg
 
 config = dotenv.dotenv_values(".env")
 
@@ -49,6 +50,9 @@ class Users(SQLModel, table=True):
     password: List["Passwords"] = Relationship(
         back_populates="info", sa_relationship_kwargs={"cascade": "delete"}
     )
+    requests: List["UserRequest"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 
 class UserCreate(BaseModel):
@@ -67,13 +71,16 @@ class Passwords(SQLModel, table=True):
     info: Users = Relationship(back_populates="password")
 
 
-class UserReqStatus(str, Enum):
+class UserReqStatus(str, enum.Enum):
     pending = "Pending"
     resolved = "Resolved"
 
 
-class UserRequest(BaseModel):
-    id: str = Field(default_factory=lambda: uuid4().hex)
-    message: str
-    status: UserReqStatus = UserReqStatus.pending
-    response: str | None = None
+class UserRequest(SQLModel, table=True):
+    id: str = Field(unique=True, nullable=False, primary_key=True, default_factory=uuid_pkg.uuid4)
+    username: str = Field(nullable=False, foreign_key="users.username")
+    message: str = Field(nullable=False)
+    status: UserReqStatus = Field(sa_column=Column(Enum(UserReqStatus)))
+    response: str = Field(nullable=True)
+    
+    user: Users = Relationship(back_populates="requests")
