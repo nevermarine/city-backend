@@ -1,5 +1,6 @@
 import enum
 import uuid
+from datetime import datetime
 from typing import List, Optional
 
 import dotenv
@@ -90,7 +91,10 @@ class UserRequest(SQLModel, table=True):
     )
     username: str = Field(nullable=False, foreign_key="users.username")
     message: str = Field(nullable=False)
-    status: UserReqStatus = Field(sa_column=Column(Enum(UserReqStatus)))
+    status: UserReqStatus = Field(
+        sa_column=Column(Enum(UserReqStatus)), default=UserReqStatus.pending
+    )
     response: str = Field(nullable=True)
+    date: datetime = Field(default_factory=datetime.now)
 
     user: Users = Relationship(back_populates="requests")
