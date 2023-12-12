@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional
 
 import dotenv
@@ -60,6 +60,16 @@ def new_uuid() -> uuid.UUID:
     while val.hex[0] == "0":
         val = uuid.uuid4()
     return val
+
+
+class News(SQLModel, table=True):
+    id: UUID4 = Field(
+        unique=True, nullable=False, primary_key=True, default_factory=new_uuid
+    )
+    date: datetime = Field(default_factory=date.today)
+    title: str = Field(nullable=False)
+    category: str = Field(nullable=False)
+    page: str = Field(nullable=False)
 
 
 class UserRequest(SQLModel, table=True):

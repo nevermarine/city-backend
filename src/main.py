@@ -226,6 +226,37 @@ async def get_user_requests(username: str):
     return user_requests
 
 
+@app.post("/news/create")
+async def create_news(
+    news: base_models.News,
+):
+    with Session(engine) as session:
+        session.add(news)
+        session.commit()
+
+    return {"message": "News created successfully"}
+
+
+@app.get("/news/{category}")
+async def get_news_by_category(category: str):
+    with Session(engine) as session:
+        statement = select(base_models.News).where(
+            base_models.News.category == category
+        )
+        news_list = session.exec(statement).all()
+
+    return news_list
+
+
+@app.delete("/news/{news_id}")
+async def delete_news(news_id: str):
+    with Session(engine) as session:
+        statement = delete(base_models.News).where(base_models.News.id == news_id)
+        session.exec(statement)
+
+    return {"message": "News deleted successfully"}
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0", help="host name")
