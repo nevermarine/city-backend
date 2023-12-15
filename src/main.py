@@ -133,13 +133,18 @@ async def update_user(username: str, new_user_data: base_models.Users):
 async def read_own_items(
     current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)]
 ):
-    with Session(engine) as session:
-        statement = select(base_models.UserRequest).where(
-            base_models.UserRequest.username == current_user.username
-        )
-        requests = session.exec(statement).all()
-
-    return requests
+    if current_user.admin:
+        with Session(engine) as session:
+            statement = select(base_models.UserRequest)
+            users = session.exec(statement).all()
+        return users
+    else:
+        with Session(engine) as session:
+            statement = select(base_models.UserRequest).where(
+                base_models.UserRequest.username == current_user.username
+            )
+            requests = session.exec(statement).all()
+        return requests
 
 
 @app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)

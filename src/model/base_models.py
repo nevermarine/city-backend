@@ -30,6 +30,7 @@ class Users(SQLModel, table=True):
     requests: List["UserRequest"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"cascade": "delete"}
     )
+    admin: bool = False
 
 
 class UserCreate(BaseModel):
