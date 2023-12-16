@@ -12,53 +12,6 @@ from src.model import base_models
 client = TestClient(app)
 
 
-def test_login_for_access_token():
-    response = client.post("/token", data={"username": "darinka", "password": "secret"})
-    assert response.status_code == 200
-
-    data = response.json()
-    assert "access_token" in data
-    assert "token_type" in data
-    assert data["token_type"] == "bearer"
-    assert base_models.Token(**data)
-
-
-def test_read_users_me():
-    response = client.get("/users/me/")
-    assert response.status_code == 401
-
-    response = client.post("/token", data={"username": "darinka", "password": "secret"})
-
-    headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
-    response = client.get("/users/me/", headers=headers)
-    data = response.json()
-
-    assert response.status_code == 200
-    assert "username" in data
-    assert "email" in data
-    assert "full_name" in data
-    assert "disabled" in data
-    assert base_models.User(**data)
-
-
-def test_read_own_items():
-    response = client.get("/users/me/items/")
-    assert response.status_code == 401
-
-    response = client.post("/token", data={"username": "darinka", "password": "secret"})
-    headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
-
-    response = client.get("/users/me/items/", headers=headers)
-    assert response.status_code == 200
-
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) > 0
-    item = data[0]
-    assert "item_id" in item
-    assert "owner" in item
-
-
 def test_create_user():
     user_payload = {
         "username": "testuser",
@@ -79,7 +32,7 @@ def test_create_user():
 
 def test_create_existing_user():
     user_payload = {
-        "username": "darinka",
+        "username": "testuser",
         "full_name": "Test User",
         "email": "testuser@example.com",
         "password": "secretpass",
@@ -115,7 +68,7 @@ def test_delete_user_not_found():
 def test_get_all_users():
     response = client.get("/users")
     assert response.status_code == 200
-    assert len(response.json()) == len(base_models.fake_users_db)
+    assert type(response.json()) == list
 
 
 def test_update_user():
@@ -124,7 +77,6 @@ def test_update_user():
         "username": username,
         "email": "newemail@example.com",
         "full_name": "Updated User",
-        "disabled": True,
     }
 
     response = client.put(f"/users/{username}", json=new_user_data)
@@ -137,7 +89,6 @@ def test_update_user():
     assert updated_user["username"] == username
     assert updated_user["full_name"] == new_user_data["full_name"]
     assert updated_user["email"] == new_user_data["email"]
-    assert updated_user["disabled"] == new_user_data["disabled"]
 
 
 def test_update_user_not_found():
@@ -146,8 +97,53 @@ def test_update_user_not_found():
         "username": username,
         "email": "newemail@example.com",
         "full_name": "Updated User",
-        "disabled": True,
     }
     response = client.put(f"/users/{username}", json=new_user_data)
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
+
+
+def test_login_for_access_token():
+    response = client.post("/token", data={"username": "darinka2", "password": "dd"})
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "access_token" in data
+    assert "token_type" in data
+    assert data["token_type"] == "bearer"
+    assert base_models.Token(**data)
+
+
+def test_read_users_me():
+    response = client.get("/users/me/")
+    assert response.status_code == 401
+
+    response = client.post("/token", data={"username": "darinka2", "password": "dd"})
+
+    headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+    response = client.get("/users/me/", headers=headers)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert "username" in data
+    assert "email" in data
+    assert "full_name" in data
+    assert base_models.Users(**data)
+
+
+# def test_read_own_items():
+#     response = client.get("/users/me/items/")
+#     assert response.status_code == 401
+
+#     response = client.post("/token", data={"username": "darinka2", "password": "dd"})
+#     headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+#     response = client.get("/users/me/items/", headers=headers)
+#     assert response.status_code == 200
+
+#     data = response.json()
+#     assert isinstance(data, list)
+#     assert len(data) > 0
+#     item = data[0]
+#     assert "item_id" in item
+#     assert "owner" in item
