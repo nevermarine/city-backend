@@ -11,6 +11,7 @@ ENV POETRY_NO_INTERACTION=1 \
 WORKDIR /app
 
 COPY pyproject.toml ./
+COPY .env ./
 ADD src/ ./src
 RUN touch README.md
 
