@@ -1,9 +1,11 @@
 import argparse
 import json
 import logging
+import os
 from datetime import timedelta
 from typing import Annotated
 
+import requests
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +18,20 @@ from src.model import base_models
 from src.model.conn import engine
 
 app = FastAPI(debug=True)
+
+TOPICS = [
+    "Бизнес и экономика",
+    "Культура и развлечения",
+    "Политика",
+    "Наука и технологии",
+    "Люди и общество",
+    "Спорт",
+    "Путешествия",
+]
+SOCIETY_TOPICS = ["Культура и развлечения", "Люди и общество", "Спорт", "Путешествия"]
+GOV_TOPICS = ["Бизнес и экономика", "Политика", "Наука и технологии"]
+HOST_NEWS_TAG = os.getenv("HOST_NEWS_TAG")
+HOST_SUMMARY = os.getenv("HOST_SUMMARY")
 
 
 def check_exist_user(username: str):
@@ -235,6 +251,21 @@ async def get_user_requests(username: str):
 async def create_news(
     news: base_models.News,
 ):
+    response = requests.post(HOST_NEWS_TAG, json={"text_news": [news.text]})
+    news.tag = response.json()["tags"][0]
+
+    if news.tag in SOCIETY_TOPICS:
+        news.category = "society"
+    elif news.tag in GOV_TOPICS:
+        news.category = "authority"
+
+    response = requests.post(
+        HOST_SUMMARY,
+        json={"model": "summarization", "stream": False, "prompt": news.text},
+    )
+    print(response)
+    news.title = response.json()["response"]
+
     with Session(engine) as session:
         session.add(news)
         session.commit()
@@ -265,6 +296,9 @@ async def delete_news(news_id: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0", help="host name")
+    parser.add_argument(
+        "--host-news-tag", type=str, help="host name for getting news tag"
+    )
     parser.add_argument("--port", type=int, default=5000, help="port number")
     parser.add_argument(
         "--allow-credentials", action="store_true", help="allow credentials"

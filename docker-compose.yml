@@ -4,5 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - HOST_NEWS_TAG=http://localhost:4444/predict
+      - HOST_SUMMARY=https://12ce-46-138-75-20.ngrok-free.app/api/generate
+    network_mode: "host"
     ports:
       - "5000:5000"
