@@ -9,13 +9,18 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from passlib.hash import bcrypt
+from pydantic import UUID4
 from sqlmodel import Session, delete, select, update
 
 from src.auth import auth
 from src.model import base_models
 from src.model.conn import engine
 
-app = FastAPI(debug=True)
+app = FastAPI(
+    title="Сваггер для сайта г.Зарафшан",
+    description="Здесь лежит код бэкенда https://github.com/nevermarine/city-backend для этого сайта.",
+    debug=True,
+)
 
 
 def check_exist_user(username: str):
@@ -28,7 +33,7 @@ def check_exist_user(username: str):
     return find_user
 
 
-@app.post("/token", response_model=base_models.Token)
+@app.post("/token", response_model=base_models.Token, tags=["Users"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
@@ -46,14 +51,14 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me/", response_model=base_models.Users)
+@app.get("/users/me/", response_model=base_models.Users, tags=["Users"])
 async def read_users_me(
     current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)]
 ):
     return current_user
 
 
-@app.post("/users/create", response_model=base_models.Users)
+@app.post("/users/create", response_model=base_models.Users, tags=["Users"])
 async def create_user(user: base_models.UserCreate):
     with Session(engine) as session:
         statement = select(base_models.Users).where(
@@ -89,7 +94,7 @@ async def create_user(user: base_models.UserCreate):
             raise HTTPException(status_code=404, detail="User already exist")
 
 
-@app.delete("/users/{username}", response_model=base_models.Users)
+@app.delete("/users/{username}", response_model=base_models.Users, tags=["Users"])
 async def delete_user(username: str):
     with Session(engine) as session:
         statement = select(base_models.Users).where(
@@ -105,7 +110,7 @@ async def delete_user(username: str):
             raise HTTPException(status_code=404, detail="User not found")
 
 
-@app.get("/users", response_model=list[base_models.Users])
+@app.get("/users", response_model=list[base_models.Users], tags=["Users"])
 async def get_all_users():
     with Session(engine) as session:
         statement = select(base_models.Users)
@@ -113,7 +118,7 @@ async def get_all_users():
     return users
 
 
-@app.put("/users/{username}", response_model=base_models.Users)
+@app.put("/users/{username}", response_model=base_models.Users, tags=["Users"])
 async def update_user(username: str, new_user_data: base_models.Users):
     find_user = check_exist_user(username)
     if find_user is not None:
@@ -129,7 +134,7 @@ async def update_user(username: str, new_user_data: base_models.Users):
         raise HTTPException(status_code=404, detail="User not found")
 
 
-@app.get("/users/me/items/")
+@app.get("/users/me/items/", tags=["Users"])
 async def read_own_items(
     current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)]
 ):
@@ -147,7 +152,11 @@ async def read_own_items(
         return requests
 
 
-@app.get("/user_reqs/items/id/", response_model=base_models.UserRequest)
+@app.get(
+    "/user_reqs/items/id/",
+    response_model=base_models.UserRequest,
+    tags=["User's requests"],
+)
 async def read_own_user_reqs_by_id(
     id_request: str,
 ):
@@ -160,7 +169,11 @@ async def read_own_user_reqs_by_id(
     return request_info
 
 
-@app.post("/user_reqs/create/", response_model=base_models.UserRequest)
+@app.post(
+    "/user_reqs/create/",
+    response_model=base_models.UserRequest,
+    tags=["User's requests"],
+)
 async def create_user_request(
     request: base_models.UserRequest,
     current_user: Annotated[base_models.Users, Depends(auth.get_current_active_user)],
@@ -175,7 +188,7 @@ async def create_user_request(
     return request
 
 
-@app.put("/user_reqs/{id_request}/status/")
+@app.put("/user_reqs/{id_request}/status/", tags=["User's requests"])
 async def update_user_request_status(
     id_request: str, status: base_models.UserReqStatus
 ):
@@ -192,7 +205,7 @@ async def update_user_request_status(
     return {"message": "Status updated successfully"}
 
 
-@app.put("/user_reqs/{id_request}/response/")
+@app.put("/user_reqs/{id_request}/response/", tags=["User's requests"])
 async def add_user_request_response(id_request: str, response: str):
     with Session(engine) as session:
         statement = (
@@ -207,7 +220,7 @@ async def add_user_request_response(id_request: str, response: str):
     return {"message": "Response added successfully"}
 
 
-@app.delete("/user_reqs/{id_request}/")
+@app.delete("/user_reqs/{id_request}/", tags=["User's requests"])
 async def delete_user_request(id_request: str):
     with Session(engine) as session:
         statement = delete(base_models.UserRequest).where(
@@ -220,7 +233,11 @@ async def delete_user_request(id_request: str):
     return {"message": "User request deleted successfully"}
 
 
-@app.get("/user_reqs/{username}/items/", response_model=list[base_models.UserRequest])
+@app.get(
+    "/user_reqs/{username}/items/",
+    response_model=list[base_models.UserRequest],
+    tags=["User's requests"],
+)
 async def get_user_requests(username: str):
     with Session(engine) as session:
         statement = select(base_models.UserRequest).where(
@@ -231,7 +248,7 @@ async def get_user_requests(username: str):
     return user_requests
 
 
-@app.post("/news/create")
+@app.post("/news/create", tags=["News"])
 async def create_news(
     news: base_models.News,
 ):
@@ -242,7 +259,7 @@ async def create_news(
     return {"message": "News created successfully"}
 
 
-@app.get("/news/{category}")
+@app.get("/news/{category}", tags=["News"])
 async def get_news_by_category(category: str):
     with Session(engine) as session:
         statement = select(base_models.News).where(
@@ -253,13 +270,73 @@ async def get_news_by_category(category: str):
     return news_list
 
 
-@app.delete("/news/{news_id}")
+@app.delete("/news/{news_id}", tags=["News"])
 async def delete_news(news_id: str):
     with Session(engine) as session:
         statement = delete(base_models.News).where(base_models.News.id == news_id)
         session.exec(statement)
 
     return {"message": "News deleted successfully"}
+
+
+@app.get("/news/{id}", tags=["News"])
+async def get_news_by_id(id: UUID4):
+    with Session(engine) as session:
+        statement = select(base_models.News).where(base_models.News.id == id)
+        news = session.exec(statement).first()
+        if news is None:
+            raise HTTPException(status_code=404, detail="News not found")
+
+    return news
+
+
+@app.post("/events/create", tags=["Events"])
+async def create_event(event: base_models.Events):
+    with Session(engine) as session:
+        session.add(event)
+        session.commit()
+
+    return {"message": "Event created successfully"}
+
+
+@app.get("/events/{location}", tags=["Events"])
+async def get_events_by_location(location: str):
+    with Session(engine) as session:
+        statement = select(base_models.Events).where(
+            base_models.Events.location == location
+        )
+        events_list = session.exec(statement).all()
+
+    return events_list
+
+
+@app.delete("/events/{id}", tags=["Events"])
+async def delete_event(id: str):
+    with Session(engine) as session:
+        statement = delete(base_models.Events).where(base_models.Events.id == id)
+        session.exec(statement)
+
+    return {"message": "Event deleted successfully"}
+
+
+@app.get("/events/{id}", tags=["Events"])
+async def get_event_by_id(id: UUID4):
+    with Session(engine) as session:
+        statement = select(base_models.Events).where(base_models.Events.id == id)
+        event = session.exec(statement).first()
+        if event is None:
+            raise HTTPException(status_code=404, detail="Event not found")
+
+    return event
+
+
+@app.get("/events", tags=["Events"])
+async def get_events():
+    with Session(engine) as session:
+        statement = select(base_models.Events)
+        events = session.exec(statement).all()
+
+    return events
 
 
 if __name__ == "__main__":

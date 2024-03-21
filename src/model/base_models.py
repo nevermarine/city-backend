@@ -1,6 +1,6 @@
+import datetime
 import enum
 import uuid
-from datetime import date, datetime
 from typing import List, Optional
 
 import dotenv
@@ -67,10 +67,22 @@ class News(SQLModel, table=True):
     id: UUID4 = Field(
         unique=True, nullable=False, primary_key=True, default_factory=new_uuid
     )
-    date: datetime = Field(default_factory=date.today)
+    date: datetime.date = Field(default_factory=datetime.date.today)
     title: str = Field(nullable=False)
     category: str = Field(nullable=False)
     page: str = Field(nullable=False)
+
+
+class Events(SQLModel, table=True):
+    id: UUID4 = Field(
+        unique=True, nullable=False, primary_key=True, default_factory=new_uuid
+    )
+    date: datetime.date = Field(nullable=False)
+    title: str = Field(nullable=False)
+    location: str = Field(nullable=False)
+    time: datetime.time = Field(nullable=False)
+    contacts: str = Field(nullable=False)
+    link: str = Field(nullable=False)
 
 
 class UserRequest(SQLModel, table=True):
@@ -83,6 +95,6 @@ class UserRequest(SQLModel, table=True):
         sa_column=Column(Enum(UserReqStatus)), default=UserReqStatus.pending
     )
     response: str = Field(nullable=True)
-    date: datetime = Field(default_factory=datetime.now)
+    date: datetime.datetime = Field(default_factory=datetime.datetime.now)
 
     user: Users = Relationship(back_populates="requests")
