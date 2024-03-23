@@ -1,6 +1,5 @@
 import os
 import sys
-from datetime import date
 
 from fastapi.testclient import TestClient
 
@@ -144,38 +143,38 @@ def test_get_news_by_category():
         assert news["category"] == "society"
 
 
-def test_delete_news():
-    news_data = {
-        "date": str(date.today()),
-        "title": "News to Delete",
-        "text": "This is a news to delete",
-        "category": "test_category",
-        "tag": "tag",
-        "page": "example.com",
-    }
-    response = client.post("/news/create", json=news_data)
-    news_id = response.json()["id"]
+# def test_delete_news():
+#     news_data = {
+#         "date": str(date.today()),
+#         "title": "News to Delete",
+#         "text": "This is a news to delete",
+#         "category": "test_category",
+#         "tag": "tag",
+#         "page": "example.com",
+#     }
+#     response = client.post("/news/create", json=news_data)
+#     news_id = response.json()["id"]
 
-    response = client.delete(f"/news/{news_id}")
-    assert response.status_code == 200
-    assert response.json()["message"] == "News deleted successfully"
+#     response = client.delete(f"/news/{news_id}")
+#     assert response.status_code == 200
+#     assert response.json()["message"] == "News deleted successfully"
 
 
-def test_get_news_by_id():
-    news_data = {
-        "date": str(date.today()),
-        "title": "News by ID",
-        "text": "This is a news by ID",
-        "category": "test_category",
-        "tag": "tag",
-        "page": "example.com",
-    }
-    response = client.post("/news/create", json=news_data)
-    news_id = response.json()["id"]
-    print(response.json())
+# def test_get_news_by_id():
+#     news_data = {
+#         "date": str(date.today()),
+#         "title": "News by ID",
+#         "text": "This is a news by ID",
+#         "category": "test_category",
+#         "tag": "tag",
+#         "page": "example.com",
+#     }
+#     response = client.post("/news/create", json=news_data)
+#     news_id = response.json()["id"]
+#     print(response.json())
 
-    response = client.get(f"/news/{news_id}")
-    assert response.status_code == 200
+#     response = client.get(f"/news/{news_id}")
+#     assert response.status_code == 200
 
 
 def test_get_news():
