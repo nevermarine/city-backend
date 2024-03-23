@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import date
 
 from fastapi.testclient import TestClient
 
@@ -12,6 +13,7 @@ from src.model import base_models
 client = TestClient(app)
 
 
+# ----------------USERS---------------------
 def test_create_user():
     user_payload = {
         "username": "testuser",
@@ -129,6 +131,109 @@ def test_read_users_me():
     assert "email" in data
     assert "full_name" in data
     assert base_models.Users(**data)
+
+
+# ----------------USERS REQUESTS---------------------
+# ----------------NEWS---------------------
+def test_get_news_by_category():
+    response = client.get("/news/category/society")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+    for news in response.json():
+        assert news["category"] == "society"
+
+
+def test_delete_news():
+    news_data = {
+        "date": str(date.today()),
+        "title": "News to Delete",
+        "text": "This is a news to delete",
+        "category": "test_category",
+        "tag": "tag",
+        "page": "example.com",
+    }
+    response = client.post("/news/create", json=news_data)
+    news_id = response.json()["id"]
+
+    response = client.delete(f"/news/{news_id}")
+    assert response.status_code == 200
+    assert response.json()["message"] == "News deleted successfully"
+
+
+def test_get_news_by_id():
+    news_data = {
+        "date": str(date.today()),
+        "title": "News by ID",
+        "text": "This is a news by ID",
+        "category": "test_category",
+        "tag": "tag",
+        "page": "example.com",
+    }
+    response = client.post("/news/create", json=news_data)
+    news_id = response.json()["id"]
+    print(response.json())
+
+    response = client.get(f"/news/{news_id}")
+    assert response.status_code == 200
+
+
+def test_get_news():
+    response = client.get("/news/")
+    assert response.status_code == 200
+
+
+# ----------------EVENTS---------------------
+def test_create_event():
+    event_data = {
+        "title": "Масленица",
+        "location": "New York",
+        "description": "Event description here",
+        "date": "11-11-2024",
+        "time": "18:40",
+        "contacts": "some",
+        "link": "some",
+    }
+    response = client.post("/events/create", json=event_data)
+    assert response.status_code == 200
+    print(response.json())
+    assert response.json()["title"] == event_data["title"]
+
+
+def test_get_events_by_location():
+    location = "New York"
+    response = client.get(f"/events/location/{location}")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+def test_get_event_by_id():
+    location = "New York"
+    response = client.get(f"/events/location/{location}")
+    events = response.json()
+
+    event_id = events[0]["id"]
+    response = client.get(f"/events/{event_id}")
+    assert response.status_code == 200
+    assert (
+        "id" in response.json()
+    )  # Проверяем, что полученный объект события содержит ID
+
+
+def test_delete_event():
+    location = "New York"
+    events = client.get(f"/events/location/{location}").json()
+
+    event_id = events[0]["id"]
+    response = client.delete(f"/events/{event_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Event deleted successfully"}
+
+
+def test_get_events():
+    response = client.get("/events")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
 
 
 # def test_read_own_items():

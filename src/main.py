@@ -35,8 +35,6 @@ TOPICS = [
 ]
 SOCIETY_TOPICS = ["Культура и развлечения", "Люди и общество", "Спорт", "Путешествия"]
 GOV_TOPICS = ["Бизнес и экономика", "Политика", "Наука и технологии"]
-HOST_NEWS_TAG = os.getenv("HOST_NEWS_TAG")
-HOST_SUMMARY = os.getenv("HOST_SUMMARY")
 
 
 def check_exist_user(username: str):
@@ -169,7 +167,7 @@ async def read_own_items(
 
 
 @app.get(
-    "/user_reqs/items/id/",
+    "/user_reqs/items/{id_request}/",
     response_model=base_models.UserRequest,
     tags=["User's requests"],
 )
@@ -264,10 +262,10 @@ async def get_user_requests(username: str):
     return user_requests
 
 
-@app.post("/news/create", tags=["News"])
-async def create_news(
-    news: base_models.News,
-):
+@app.post("/news/create", response_model=base_models.News, tags=["News"])
+async def create_news(news: base_models.News):
+    HOST_NEWS_TAG = os.getenv("HOST_NEWS_TAG")
+    HOST_SUMMARY = os.getenv("HOST_SUMMARY")
     response = requests.post(HOST_NEWS_TAG, json={"text_news": [news.text]})
     news.tag = response.json()["tags"][0]
 
@@ -280,17 +278,17 @@ async def create_news(
         HOST_SUMMARY,
         json={"model": "summarization", "stream": False, "prompt": news.text},
     )
-    print(response)
     news.title = response.json()["response"]
 
     with Session(engine) as session:
         session.add(news)
         session.commit()
+        session.refresh(news)
 
-    return {"message": "News created successfully"}
+    return news
 
 
-@app.get("/news/{category}", tags=["News"])
+@app.get("/news/category/{category}", tags=["News"])
 async def get_news_by_category(category: str):
     with Session(engine) as session:
         statement = select(base_models.News).where(
@@ -321,16 +319,26 @@ async def get_news_by_id(id: UUID4):
     return news
 
 
-@app.post("/events/create", tags=["Events"])
+@app.get("/news", tags=["News"])
+async def get_news():
+    with Session(engine) as session:
+        statement = select(base_models.News)
+        news = session.exec(statement).all()
+
+    return news
+
+
+@app.post("/events/create", response_model=base_models.Events, tags=["Events"])
 async def create_event(event: base_models.Events):
     with Session(engine) as session:
         session.add(event)
         session.commit()
+        session.refresh(event)
 
-    return {"message": "Event created successfully"}
+    return event
 
 
-@app.get("/events/{location}", tags=["Events"])
+@app.get("/events/location/{location}", tags=["Events"])
 async def get_events_by_location(location: str):
     with Session(engine) as session:
         statement = select(base_models.Events).where(
@@ -346,6 +354,7 @@ async def delete_event(id: str):
     with Session(engine) as session:
         statement = delete(base_models.Events).where(base_models.Events.id == id)
         session.exec(statement)
+        session.commit()
 
     return {"message": "Event deleted successfully"}
 
