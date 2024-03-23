@@ -11,10 +11,10 @@ ENV POETRY_NO_INTERACTION=1 \
 WORKDIR /app
 
 COPY pyproject.toml ./
+RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
+
 COPY .env ./
 ADD src/ ./src
 RUN touch README.md
-
-RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
 
 ENTRYPOINT ["poetry", "run", "python", "-m", "src.main"]
