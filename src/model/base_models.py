@@ -69,7 +69,9 @@ class News(SQLModel, table=True):
     )
     date: datetime = Field(default_factory=date.today)
     title: str = Field(nullable=False)
-    category: str = Field(nullable=False)
+    text: str = Field(nullable=False)
+    category: str = Field(nullable=True)
+    tag: str = Field(nullable=True)
     page: str = Field(nullable=False)
 
 
